@@ -10,12 +10,14 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class TariffRepositoryImpl implements TariffRepository {
 
-    static String FINDALL = "SELECT * FROM tariff";
+    static String FIND_ALL = "SELECT * FROM tariff";
     static String INSERT = "INSERT INTO tariff(type, interest_rating) VALUES(?, ?)";
     static String UPDATE = "UPDATE tariff SET type=?, interest_rating=? WHERE id=?";
     static String FINDBYTYPE = "SELECT * FROM tariff WHERE type=?";
@@ -26,7 +28,7 @@ public class TariffRepositoryImpl implements TariffRepository {
 
     @Override
     public Iterable<Tariff> findAll() {
-        return jdbcTemplate.query(FINDALL, tariffRowMapper);
+        return jdbcTemplate.query(FIND_ALL, tariffRowMapper);
     }
 
     @Override
@@ -46,12 +48,15 @@ public class TariffRepositoryImpl implements TariffRepository {
     }
 
     @Override
-    public Tariff update(long id, Tariff tariff) {
+    public Optional<Tariff> update(long id, Tariff tariff) {
+        try {
+            jdbcTemplate.update(UPDATE,
+                    tariff.getType().toString(), tariff.getInterestRate(), id);
+        } catch (Exception e) {
+            return Optional.empty();
+        }
 
-        jdbcTemplate.update(UPDATE,
-                tariff.getType().toString(), tariff.getInterestRate(), id);
-
-        return tariff;
+        return Optional.of(tariff);
     }
 
     @Override

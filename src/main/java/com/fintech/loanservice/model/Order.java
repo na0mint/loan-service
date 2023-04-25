@@ -15,9 +15,8 @@ import java.util.UUID;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Order {
 
-    long id;
+    Long id;
 
-    @NotNull(message = "Order id is required")
     UUID orderId;
 
     @NotNull(message = "User id is required")
@@ -26,17 +25,11 @@ public class Order {
     @NotNull(message = "Tariff id is required")
     long tariffId;
 
-    @NotNull(message = "Credit rating is required")
-    @Max(value = 1, message = "Credit rating should be lower than 1")
-    @Min(value = 0, message = "Credit rating should be greater than 0")
     double creditRating;
 
-    @NotNull(message = "Status is required")
     OrderStatus status;
 
-    @NotNull(message = "Time of insertion is required")
     Date timeInsert;
 
-    @NotNull(message = "Update time is required")
     Date timeUpdate;
 }

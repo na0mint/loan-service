@@ -9,6 +9,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -16,7 +17,9 @@ import java.util.UUID;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class OrderRepositoryImpl implements OrderRepository {
 
-    static String FINDALL = "SELECT * FROM loan_order";
+    static String FIND_ALL = "SELECT * FROM loan_order";
+    static String FIND_ALL_BY_USERID = "SELECT * FROM loan_order WHERE user_id=?";
+    static String FIND_BY_ORDERID = "SELECT * FROM loan_order WHERE order_id=?";
     static String INSERT = "INSERT INTO loan_order(order_id, user_id, tariff_id," +
             " credit_rating, status, time_update)" +
             " VALUES (?, ?, ?, ?, ?, current_timestamp)";
@@ -31,7 +34,12 @@ public class OrderRepositoryImpl implements OrderRepository {
     @Override
     public Iterable<Order> findAll() {
 
-        return jdbcTemplate.query(FINDALL, orderRowMapper);
+        return jdbcTemplate.query(FIND_ALL, orderRowMapper);
+    }
+
+    @Override
+    public Iterable<Order> findAllByUserId(long id) {
+        return jdbcTemplate.query(FIND_ALL_BY_USERID, orderRowMapper, id);
     }
 
     @Override
@@ -45,18 +53,35 @@ public class OrderRepositoryImpl implements OrderRepository {
     }
 
     @Override
-    public Order update(long id, Order order) {
+    public Optional<Order> update(long id, Order order) {
 
-        jdbcTemplate.update(UPDATE, order.getOrderId(),
-                order.getUserId(), order.getTariffId(),
-                order.getCreditRating(), order.getStatus().toString(), id);
+        try {
+            jdbcTemplate.update(UPDATE, order.getOrderId(),
+                    order.getUserId(), order.getTariffId(),
+                    order.getCreditRating(), order.getStatus().toString(), id);
+        } catch (Exception e) {
+            return Optional.empty();
+        }
 
-        return order;
+        return Optional.of(order);
     }
 
     @Override
     public void delete(long userId, UUID orderId) {
 
         jdbcTemplate.update(DELETE, userId, orderId.toString());
+    }
+
+    @Override
+    public Optional<Order> findByOrderId(UUID orderId) {
+        Order order = new Order();
+
+        try {
+            order = (Order) jdbcTemplate.query(FIND_BY_ORDERID, orderRowMapper, orderId);
+        } catch (Exception e) {
+            return Optional.empty();
+        }
+
+        return Optional.of(order);
     }
 }
