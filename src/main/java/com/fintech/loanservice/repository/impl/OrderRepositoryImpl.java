@@ -1,14 +1,19 @@
 package com.fintech.loanservice.repository.impl;
 
+import com.fintech.loanservice.constants.OrderStatus;
 import com.fintech.loanservice.model.Order;
 import com.fintech.loanservice.repository.OrderRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -18,11 +23,12 @@ import java.util.UUID;
 public class OrderRepositoryImpl implements OrderRepository {
 
     static String FIND_ALL = "SELECT * FROM loan_order";
+    static String FIND_ALL_BY_STATUS = "SELECT * FROM loan_order WHERE status=?";
     static String FIND_ALL_BY_USERID = "SELECT * FROM loan_order WHERE user_id=?";
     static String FIND_BY_ORDERID = "SELECT * FROM loan_order WHERE order_id=?";
     static String INSERT = "INSERT INTO loan_order(order_id, user_id, tariff_id," +
-            " credit_rating, status, time_update)" +
-            " VALUES (?, ?, ?, ?, ?, current_timestamp)";
+            " credit_rating, status,time_insert, time_update)" +
+            " VALUES (?, ?, ?, ?, ?, current_timestamp, current_timestamp)";
     static String UPDATE = "UPDATE loan_order SET order_id=?, user_id=?," +
             " tariff_id=?, credit_rating=?, status=?, time_update=current_timestamp" +
             " WHERE id=?";
@@ -74,7 +80,7 @@ public class OrderRepositoryImpl implements OrderRepository {
 
     @Override
     public Optional<Order> findByOrderId(UUID orderId) {
-        Order order = new Order();
+        Order order;
 
         try {
             order = (Order) jdbcTemplate.query(FIND_BY_ORDERID, orderRowMapper, orderId);
@@ -83,5 +89,31 @@ public class OrderRepositoryImpl implements OrderRepository {
         }
 
         return Optional.of(order);
+    }
+
+    @Override
+    public Iterable<Order> findAllByStatus(OrderStatus status) {
+        return jdbcTemplate.query(FIND_ALL_BY_STATUS, orderRowMapper, status.toString());
+    }
+
+    public int saveAll(List<Order> orders) {
+        jdbcTemplate.batchUpdate(UPDATE, new BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(PreparedStatement ps, int i) throws SQLException {
+                ps.setString(1, orders.get(i).getOrderId().toString());
+                ps.setLong(2, orders.get(i).getUserId());
+                ps.setLong(3, orders.get(i).getTariffId());
+                ps.setDouble(4, orders.get(i).getCreditRating());
+                ps.setString(5, orders.get(i).getStatus().toString());
+                ps.setLong(6, orders.get(i).getId());
+            }
+
+            @Override
+            public int getBatchSize() {
+                return orders.size();
+            }
+        });
+
+        return orders.size();
     }
 }

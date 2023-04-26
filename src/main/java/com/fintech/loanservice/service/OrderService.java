@@ -10,4 +10,5 @@ public interface OrderService {
     Order save(Order order);
     Order update(Order order);
     OrderStatus getStatus(UUID id);
+    void delete(Order order);
 }

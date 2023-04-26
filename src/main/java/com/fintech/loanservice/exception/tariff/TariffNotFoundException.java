@@ -6,6 +6,6 @@ import com.fintech.loanservice.exception.CustomException;
 public class TariffNotFoundException extends CustomException {
 
     public TariffNotFoundException() {
-        super(Code.TARIFF_NOT_FOUND, "Заявка не найдена");
+        super(Code.TARIFF_NOT_FOUND, "Тариф не найден");
     }
 }

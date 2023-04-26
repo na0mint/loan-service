@@ -18,8 +18,8 @@ import java.util.Optional;
 public class TariffRepositoryImpl implements TariffRepository {
 
     static String FIND_ALL = "SELECT * FROM tariff";
-    static String INSERT = "INSERT INTO tariff(type, interest_rating) VALUES(?, ?)";
-    static String UPDATE = "UPDATE tariff SET type=?, interest_rating=? WHERE id=?";
+    static String INSERT = "INSERT INTO tariff(type, interest_rate) VALUES(?, ?)";
+    static String UPDATE = "UPDATE tariff SET type=?, interest_rate=? WHERE id=?";
     static String FINDBYTYPE = "SELECT * FROM tariff WHERE type=?";
     static String DELETE = "DELETE FROM tariff WHERE id=?";
 

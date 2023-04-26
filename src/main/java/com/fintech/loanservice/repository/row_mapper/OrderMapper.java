@@ -21,8 +21,8 @@ public class OrderMapper implements RowMapper<Order> {
         order.setTariffId(rs.getLong("tariff_id"));
         order.setCreditRating(rs.getDouble("credit_rating"));
         order.setStatus(OrderStatus.valueOf(rs.getString("status")));
-        order.setTimeInsert(rs.getDate("time_insert"));
-        order.setTimeUpdate(rs.getDate("time_update"));
+        order.setTimeInsert(rs.getTimestamp("time_insert"));
+        order.setTimeUpdate(rs.getTimestamp("time_update"));
 
         return order;
     }
