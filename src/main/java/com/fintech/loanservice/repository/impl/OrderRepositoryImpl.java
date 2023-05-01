@@ -82,11 +82,12 @@ public class OrderRepositoryImpl implements OrderRepository {
     public Optional<Order> findByOrderId(UUID orderId) {
         Order order;
 
-        try {
-            order = (Order) jdbcTemplate.query(FIND_BY_ORDERID, orderRowMapper, orderId);
-        } catch (Exception e) {
-            return Optional.empty();
-        }
+       try {
+            order = jdbcTemplate.queryForObject(FIND_BY_ORDERID, orderRowMapper, orderId.toString());
+       } catch (Exception e) {
+            System.out.println("Not found");
+           return Optional.empty();
+       }
 
         return Optional.of(order);
     }

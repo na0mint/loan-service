@@ -1,5 +1,7 @@
 package com.fintech.loanservice.controller;
 
+import com.fintech.loanservice.dto.OrderDto;
+import com.fintech.loanservice.dto.mapper.OrderMapper;
 import com.fintech.loanservice.model.Order;
 import com.fintech.loanservice.service.OrderService;
 import lombok.AccessLevel;
@@ -19,12 +21,14 @@ import java.util.UUID;
 public class OrderController {
 
     OrderService orderService;
+    OrderMapper orderMapper;
 
     @PostMapping("/order")
-    public ResponseEntity<?> saveOrder(@RequestBody Order newOrder) {
+    public ResponseEntity<?> saveOrder(@RequestBody OrderDto newOrder) {
         log.info("New order is about to save: {}", newOrder.toString());
 
-        return ResponseEntity.ok(orderService.save(newOrder).getOrderId());
+        return ResponseEntity.ok(orderService.save(
+                orderMapper.mapToOrder(newOrder)).getOrderId());
     }
 
     @GetMapping("/order")
@@ -41,7 +45,7 @@ public class OrderController {
     @DeleteMapping("/deleteOrder")
     public ResponseEntity<?> delete(@RequestBody Order order) {
         orderService.delete(order);
-        log.info("Order with id: {} was deleted", order.getOrderId());
+        log.info("Order with id: {} was deleted", order);
 
         return ResponseEntity.ok().build();
     }
