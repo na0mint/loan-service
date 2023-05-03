@@ -10,8 +10,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @ConditionalOnProperty(name = "scheduler.enabled", matchIfMissing = true)
 public class LoanServiceApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(LoanServiceApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(LoanServiceApplication.class, args);
+    }
 
 }

@@ -29,7 +29,7 @@ public class OrderExceptionHandler {
     public ResponseEntity<?> orderDeletion(OrderImpossibleToDeleteException e) {
 
         log.error("Order deletion exception: {}", e.toString());
-        return new ResponseEntity<>(e.getError(), HttpStatus.I_AM_A_TEAPOT);
+        return new ResponseEntity<>(e.getError(), HttpStatus.FORBIDDEN);
     }
 
     @ExceptionHandler(OrderNotFoundException.class)
