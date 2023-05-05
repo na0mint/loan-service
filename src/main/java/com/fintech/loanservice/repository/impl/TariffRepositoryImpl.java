@@ -20,8 +20,9 @@ public class TariffRepositoryImpl implements TariffRepository {
     static String FIND_ALL = "SELECT * FROM tariff";
     static String INSERT = "INSERT INTO tariff(type, interest_rate) VALUES(?, ?)";
     static String UPDATE = "UPDATE tariff SET type=?, interest_rate=? WHERE id=?";
-    static String FINDBYTYPE = "SELECT * FROM tariff WHERE type=?";
+    static String FIND_BY_TYPE = "SELECT * FROM tariff WHERE type=?";
     static String DELETE = "DELETE FROM tariff WHERE id=?";
+    static String FIND_BY_ID = "SELECT * FROM tariff WHERE id=?";
 
     JdbcTemplate jdbcTemplate;
     RowMapper<Tariff> tariffRowMapper;
@@ -34,7 +35,7 @@ public class TariffRepositoryImpl implements TariffRepository {
     @Override
     public Iterable<Tariff> findAllByType(TariffType type) {
 
-        return jdbcTemplate.query(FINDBYTYPE, tariffRowMapper,
+        return jdbcTemplate.query(FIND_BY_TYPE, tariffRowMapper,
                 type.toString());
     }
 
@@ -57,6 +58,16 @@ public class TariffRepositoryImpl implements TariffRepository {
         }
 
         return Optional.of(tariff);
+    }
+
+    @Override
+    public Optional<Tariff> findById(long id) {
+
+        try {
+            return Optional.ofNullable(jdbcTemplate.queryForObject(FIND_BY_ID, tariffRowMapper, id));
+        } catch (Exception e) {
+            return Optional.empty();
+        }
     }
 
     @Override

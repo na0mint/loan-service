@@ -1,8 +1,7 @@
-package com.fintech.loanservice;
+package com.fintech.loanservice.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fintech.loanservice.constants.OrderStatus;
-import com.fintech.loanservice.controller.OrderController;
 import com.fintech.loanservice.dto.mapper.OrderMapper;
 import com.fintech.loanservice.model.Order;
 import com.fintech.loanservice.repository.OrderRepository;
@@ -13,7 +12,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -37,7 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(OrderController.class)
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@AutoConfigureMockMvc
+//@AutoConfigureMockMvc
 public class OrderControllerTest {
 
     @Autowired
@@ -96,6 +94,7 @@ public class OrderControllerTest {
         mockMvc.perform(delete("/loan-service/deleteOrder").with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(testOrder)))
+                .andDo(print())
                 .andExpect(status().isOk());
     }
 
@@ -143,14 +142,16 @@ public class OrderControllerTest {
 //        Order newOrder = orderMapper.mapToOrder(orderDto);
 //
 //
-//
-//       //when(orderService.save(newOrder)).thenReturn(newOrder);
+//        //when(orderService.save(newOrder)).thenReturn(newOrder);
+//        when(orderRepository.save(newOrder)).thenReturn(newOrder);
 //
 //        mockMvc.perform(post("/loan-service/order")
 //                        .contentType(MediaType.APPLICATION_JSON)
 //                        .content(objectMapper.writeValueAsString(orderDto))
+//                        .accept(MediaType.APPLICATION_JSON)
 //                        .with(csrf()))
 //                .andDo(print())
+//                .andExpect(status().isOk())
 //                .andExpect(jsonPath("$.orderId",
 //                        is(notNullValue())));
 //    }

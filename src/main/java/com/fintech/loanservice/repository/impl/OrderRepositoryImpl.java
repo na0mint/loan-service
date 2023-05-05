@@ -80,16 +80,14 @@ public class OrderRepositoryImpl implements OrderRepository {
 
     @Override
     public Optional<Order> findByOrderId(UUID orderId) {
-        Order order;
 
        try {
-            order = jdbcTemplate.queryForObject(FIND_BY_ORDERID, orderRowMapper, orderId.toString());
+            return Optional.ofNullable(jdbcTemplate.queryForObject(
+                    FIND_BY_ORDERID, orderRowMapper, orderId.toString()));
        } catch (Exception e) {
             System.out.println("Not found");
            return Optional.empty();
        }
-
-        return Optional.of(order);
     }
 
     @Override

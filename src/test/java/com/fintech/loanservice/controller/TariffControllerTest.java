@@ -1,6 +1,5 @@
-package com.fintech.loanservice;
+package com.fintech.loanservice.controller;
 
-import com.fintech.loanservice.controller.TariffController;
 import com.fintech.loanservice.service.TariffService;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -24,7 +23,7 @@ public class TariffControllerTest {
     @MockBean
     TariffService tariffService;
 
-    @WithMockUser(value = "user")
+    @WithMockUser()
     @Test
     public void getTariffsTest() throws Exception {
         ResultActions response = mockMvc.perform(get("/loan-service/getTariffs"));

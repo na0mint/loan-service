@@ -13,6 +13,7 @@ public interface TariffRepository {
     Tariff save(Tariff tariff);
 
     Optional<Tariff> update(long id, Tariff tariff);
+    Optional<Tariff> findById(long id);
 
     void delete(long id);
 }
