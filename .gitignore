@@ -31,3 +31,9 @@ build/
 
 ### VS Code ###
 .vscode/
+
+###Monitoring###
+.grafana
+.prometheus
+/scripts/grafana
+/scripts/prometheus

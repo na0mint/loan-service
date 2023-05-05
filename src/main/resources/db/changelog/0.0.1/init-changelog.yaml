@@ -73,3 +73,40 @@ databaseChangeLog:
                     type: timestamp without time zone
                     constraints:
                       nullable: false
+
+        - insert:
+            tableName: tariff
+            columns:
+              - column:
+                  name: type
+                  value: "CONSUMER"
+              - column:
+                  name: interest_rate
+                  value: "14%"
+        - insert:
+            tableName: tariff
+            columns:
+              - column:
+                  name: type
+                  value: "MORTGAGE"
+              - column:
+                  name: interest_rate
+                  value: "8%"
+        - insert:
+            tableName: tariff
+            columns:
+              - column:
+                  name: type
+                  value: "EDUCATION"
+              - column:
+                  name: interest_rate
+                  value: "11%"
+        - insert:
+            tableName: tariff
+            columns:
+              - column:
+                  name: type
+                  value: "VEHICLE"
+              - column:
+                  name: interest_rate
+                  value: "9%"

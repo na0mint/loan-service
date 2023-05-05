@@ -28,6 +28,8 @@ public class SecurityConfig {
                 .requestMatchers("/loan-service/getStatusOrder").permitAll()
                 .requestMatchers(HttpMethod.DELETE,"/loan-service/deleteOrder").permitAll()
                 .requestMatchers("/loan-service/getTariffs").permitAll()
+                .requestMatchers("/actuator").anonymous()
+                .requestMatchers("/actuator/*").anonymous()
                 .and()
                 .httpBasic()
                 .and()
@@ -48,12 +50,12 @@ public class SecurityConfig {
     public InMemoryUserDetailsManager userDetailsService() {
 
         UserDetails user = User.withUsername("user")
-                .password(passwordEncoder().encode("user123"))
+                .password(passwordEncoder().encode("user"))
                 .roles("USER")
                 .build();
 
         UserDetails admin = User.withUsername("admin")
-                .password(passwordEncoder().encode("admin123"))
+                .password(passwordEncoder().encode("admin"))
                 .roles("USER", "ADMIN")
                 .build();
 
