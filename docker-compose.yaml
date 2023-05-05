@@ -51,4 +51,4 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - ./scripts/config/prometheus.yaml:/etc/prometheus/prometheus.yaml
+      - ./scripts/config/prometheus.yml:/etc/prometheus/prometheus.yml
