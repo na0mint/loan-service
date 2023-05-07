@@ -1,6 +1,7 @@
 version: '3.5'
 
 services:
+
   postgres:
     image: postgres:12.13-alpine3.17
     container_name: postgres
@@ -16,7 +17,7 @@ services:
       timeout: 10s
       retries: 3
     volumes:
-      - "/db-data/var/lib/postgresql/data"
+      - /db-data/var/lib/postgresql/data
 
   loan-service:
     build:
@@ -35,6 +36,9 @@ services:
       - POSTGRES_DB=loan_service_db
     depends_on:
       - postgres
+    labels:
+      collect_logs_with_filebeat: "true"
+      decode_log_event_to_json_object: "true"
 
   grafana:
     build: './scripts/config/grafana'
@@ -51,4 +55,52 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - ./scripts/config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./scripts/config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.7.1
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - "discovery.type=single-node"
+    volumes:
+      - ./elasticsearch/data:/var/lib/elasticsearch/data:rw
+      - ./scripts/config/elasticsearch/elasticsearch.yaml:/usr/share/scripts/config/elasticsearch/elasticsearch.yaml:ro,Z
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.7.1
+    ports:
+      - "25826:25826"
+      - "5044:5044"
+      - "9600:9600"
+    environment:
+      LS_JAVA_OPTS: -Xms256m -Xmx256m
+    volumes:
+      - ./scripts/config/logstash/pipeline:/usr/share/scripts/config/logstash/pipeline
+      - ./scripts/config/logstash/config/logstash.yaml:/usr/share/scripts/config/logstash/config/logstash.yaml
+    restart: on-failure
+    depends_on:
+      - elasticsearch
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.7.1
+    ports:
+      - "5601:5601"
+    restart: on-failure
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.7.1
+    volumes:
+      - ./scripts/config/filebeat/filebeat.docker.yml:/etc/filebeat/filebeat.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./filebeat/data:/usr/share/filebeat/data:rw
+    user: root
+    restart: on-failure
+    depends_on:
+      - logstash
