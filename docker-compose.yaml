@@ -1,6 +1,31 @@
-version: '3.5'
+version: '3.7'
 
 services:
+  setup:
+    profiles:
+      - setup
+    build:
+      context: setup/
+      args:
+        ELASTIC_VERSION: ${ELASTIC_VERSION}
+    init: true
+    volumes:
+      - ./setup/entrypoint.sh:/entrypoint.sh:ro,Z
+      - ./setup/lib.sh:/lib.sh:ro,Z
+      - ./setup/roles:/roles:ro,Z
+    environment:
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD:-}
+      LOGSTASH_INTERNAL_PASSWORD: ${LOGSTASH_INTERNAL_PASSWORD:-}
+      KIBANA_SYSTEM_PASSWORD: ${KIBANA_SYSTEM_PASSWORD:-}
+      METRICBEAT_INTERNAL_PASSWORD: ${METRICBEAT_INTERNAL_PASSWORD:-}
+      FILEBEAT_INTERNAL_PASSWORD: ${FILEBEAT_INTERNAL_PASSWORD:-}
+      HEARTBEAT_INTERNAL_PASSWORD: ${HEARTBEAT_INTERNAL_PASSWORD:-}
+      MONITORING_INTERNAL_PASSWORD: ${MONITORING_INTERNAL_PASSWORD:-}
+      BEATS_SYSTEM_PASSWORD: ${BEATS_SYSTEM_PASSWORD:-}
+    networks:
+      - loan-service
+    depends_on:
+      - elasticsearch
 
   postgres:
     image: postgres:12.13-alpine3.17
@@ -18,6 +43,8 @@ services:
       retries: 3
     volumes:
       - /db-data/var/lib/postgresql/data
+    networks:
+      - loan-service
 
   loan-service:
     build:
@@ -39,6 +66,8 @@ services:
     labels:
       collect_logs_with_filebeat: "true"
       decode_log_event_to_json_object: "true"
+    networks:
+      - loan-service
 
   grafana:
     build: './scripts/config/grafana'
@@ -49,6 +78,8 @@ services:
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
+    networks:
+      - loan-service
 
   prometheus:
     image: prom/prometheus
@@ -56,51 +87,89 @@ services:
       - "9090:9090"
     volumes:
       - ./scripts/config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - loan-service
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.7.1
-    ports:
-      - "9200:9200"
-      - "9300:9300"
-    environment:
-      - "discovery.type=single-node"
+    build:
+      context: elasticsearch/
+      args:
+        ELASTIC_VERSION: ${ELASTIC_VERSION}
     volumes:
-      - ./elasticsearch/data:/var/lib/elasticsearch/data:rw
-      - ./scripts/config/elasticsearch/elasticsearch.yaml:/usr/share/scripts/config/elasticsearch/elasticsearch.yaml:ro,Z
-
-  logstash:
-    image: docker.elastic.co/logstash/logstash:8.7.1
+      - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro,Z
+      - elasticsearch:/usr/share/elasticsearch/data:Z
     ports:
-      - "25826:25826"
-      - "5044:5044"
-      - "9600:9600"
+      - 9200:9200
+      - 9300:9300
     environment:
-      LS_JAVA_OPTS: -Xms256m -Xmx256m
-    volumes:
-      - ./scripts/config/logstash/pipeline:/usr/share/scripts/config/logstash/pipeline
-      - ./scripts/config/logstash/config/logstash.yaml:/usr/share/scripts/config/logstash/config/logstash.yaml
-    restart: on-failure
-    depends_on:
-      - elasticsearch
+      node.name: elasticsearch
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+      # Bootstrap password.
+      # Used to initialize the keystore during the initial startup of
+      # Elasticsearch. Ignored on subsequent runs.
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD:-}
+      # Use single node discovery in order to disable production mode and avoid bootstrap checks.
+      # see: https://www.elastic.co/guide/en/elasticsearch/reference/current/bootstrap-checks.html
+      discovery.type: single-node
+    restart: unless-stopped
+    networks:
+      - loan-service
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:8.7.1
+    build:
+      context: kibana/
+      args:
+        ELASTIC_VERSION: ${ELASTIC_VERSION}
+    volumes:
+      - ./kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml:ro,Z
     ports:
-      - "5601:5601"
-    restart: on-failure
+      - 5601:5601
     environment:
-      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      KIBANA_SYSTEM_PASSWORD: ${KIBANA_SYSTEM_PASSWORD:-}
     depends_on:
       - elasticsearch
+    restart: unless-stopped
+    networks:
+      - loan-service
 
-  filebeat:
-    image: docker.elastic.co/beats/filebeat:8.7.1
+#  filebeat:
+#    image: docker.elastic.co/beats/filebeat:${STACK_VERSION}
+#    volumes:
+#      - ./filebeat/filebeat.docker.yml:/usr/share/filebeat/filebeat.docker.yml:ro
+#      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+#      - /var/run/docker.sock:/var/run/docker.sock:ro
+#      - ./filebeat/data:/usr/share/filebeat/data:rw
+#    user: root
+#    restart: on-failure
+#    depends_on:
+#      - logstash
+
+  logstash:
+    build:
+      context: logstash/
+      args:
+        ELASTIC_VERSION: ${ELASTIC_VERSION}
     volumes:
-      - ./scripts/config/filebeat/filebeat.docker.yml:/etc/filebeat/filebeat.yml:ro
-      - /var/lib/docker/containers:/var/lib/docker/containers:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./filebeat/data:/usr/share/filebeat/data:rw
-    user: root
-    restart: on-failure
+      - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro,Z
+      - ./logstash/pipeline:/usr/share/logstash/pipeline:ro,Z
+    ports:
+      - 5044:5044
+      - 50000:50000/tcp
+      - 50000:50000/udp
+      - 9600:9600
+    environment:
+      LS_JAVA_OPTS: -Xms256m -Xmx256m
+      LOGSTASH_INTERNAL_PASSWORD: ${LOGSTASH_INTERNAL_PASSWORD:-}
     depends_on:
-      - logstash
+      - elasticsearch
+    restart: unless-stopped
+    networks:
+      - loan-service
+
+
+networks:
+  loan-service:
+    driver: bridge
+
+volumes:
+  elasticsearch:

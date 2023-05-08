@@ -1,7 +1,7 @@
 filebeat.autodiscover:
   providers:
     - type: docker
-      labels.decode: true
+      labels.dedot: true
       templates:
         - condition:
             contains:
