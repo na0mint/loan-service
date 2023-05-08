@@ -22,8 +22,6 @@ services:
       HEARTBEAT_INTERNAL_PASSWORD: ${HEARTBEAT_INTERNAL_PASSWORD:-}
       MONITORING_INTERNAL_PASSWORD: ${MONITORING_INTERNAL_PASSWORD:-}
       BEATS_SYSTEM_PASSWORD: ${BEATS_SYSTEM_PASSWORD:-}
-    networks:
-      - loan-service
     depends_on:
       - elasticsearch
 
@@ -43,8 +41,6 @@ services:
       retries: 3
     volumes:
       - /db-data/var/lib/postgresql/data
-    networks:
-      - loan-service
 
   loan-service:
     build:
@@ -63,11 +59,6 @@ services:
       - POSTGRES_DB=loan_service_db
     depends_on:
       - postgres
-    labels:
-      collect_logs_with_filebeat: "true"
-      decode_log_event_to_json_object: "true"
-    networks:
-      - loan-service
 
   grafana:
     build: './scripts/config/grafana'
@@ -78,8 +69,6 @@ services:
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
-    networks:
-      - loan-service
 
   prometheus:
     image: prom/prometheus
@@ -87,8 +76,6 @@ services:
       - "9090:9090"
     volumes:
       - ./scripts/config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-    networks:
-      - loan-service
 
   elasticsearch:
     build:
@@ -112,8 +99,6 @@ services:
       # see: https://www.elastic.co/guide/en/elasticsearch/reference/current/bootstrap-checks.html
       discovery.type: single-node
     restart: unless-stopped
-    networks:
-      - loan-service
 
   kibana:
     build:
@@ -129,18 +114,20 @@ services:
     depends_on:
       - elasticsearch
     restart: unless-stopped
-    networks:
-      - loan-service
-
+#
 #  filebeat:
-#    image: docker.elastic.co/beats/filebeat:${STACK_VERSION}
+#    image: docker.elastic.co/beats/filebeat:${ELASTIC_VERSION}
 #    volumes:
-#      - ./filebeat/filebeat.docker.yml:/usr/share/filebeat/filebeat.docker.yml:ro
+#      - ./filebeat/filebeat.yaml:/usr/share/filebeat/filebeat.yaml:ro
 #      - /var/lib/docker/containers:/var/lib/docker/containers:ro
 #      - /var/run/docker.sock:/var/run/docker.sock:ro
 #      - ./filebeat/data:/usr/share/filebeat/data:rw
 #    user: root
 #    restart: on-failure
+#    labels:
+#      co.elastic.logs/json.overwrite_keys: true
+#      co.elastic.logs/json.add_error_key: true
+#      co.elastic.logs/json.expand_keys: true
 #    depends_on:
 #      - logstash
 
@@ -150,26 +137,23 @@ services:
       args:
         ELASTIC_VERSION: ${ELASTIC_VERSION}
     volumes:
-      - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro,Z
-      - ./logstash/pipeline:/usr/share/logstash/pipeline:ro,Z
+      - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml
+      - ./logstash/pipeline:/usr/share/logstash/pipeline
+      - /mnt/c/temp/logs/:/usr/share/logstash/logs/
     ports:
       - 5044:5044
       - 50000:50000/tcp
       - 50000:50000/udp
       - 9600:9600
     environment:
+      LOG_LEVEL: debug
       LS_JAVA_OPTS: -Xms256m -Xmx256m
-      LOGSTASH_INTERNAL_PASSWORD: ${LOGSTASH_INTERNAL_PASSWORD:-}
+      LOGSTASH_INTERNAL_PASSWORD: ${LOGSTASH_INTERNAL_PASSWORD}
     depends_on:
       - elasticsearch
     restart: unless-stopped
-    networks:
-      - loan-service
 
 
-networks:
-  loan-service:
-    driver: bridge
 
 volumes:
   elasticsearch:
