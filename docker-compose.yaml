@@ -114,14 +114,13 @@ services:
     depends_on:
       - elasticsearch
     restart: unless-stopped
-#
+
 #  filebeat:
 #    image: docker.elastic.co/beats/filebeat:${ELASTIC_VERSION}
 #    volumes:
 #      - ./filebeat/filebeat.yaml:/usr/share/filebeat/filebeat.yaml:ro
-#      - /var/lib/docker/containers:/var/lib/docker/containers:ro
-#      - /var/run/docker.sock:/var/run/docker.sock:ro
-#      - ./filebeat/data:/usr/share/filebeat/data:rw
+#      - ./filebeat/data/:/usr/share/filebeat/data/:rw
+#      - /mnt/c/temp/logs/:/usr/share/logstash/logs/
 #    user: root
 #    restart: on-failure
 #    labels:
@@ -138,8 +137,8 @@ services:
         ELASTIC_VERSION: ${ELASTIC_VERSION}
     volumes:
       - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml
-      - ./logstash/pipeline:/usr/share/logstash/pipeline
-      - /mnt/c/temp/logs/:/usr/share/logstash/logs/
+      - ./logstash/pipeline:/usr/share/logstash/pipeline/
+      - c:/temp/logs/loan-service.log:/usr/share/logstash/logs/loan-service.log
     ports:
       - 5044:5044
       - 50000:50000/tcp

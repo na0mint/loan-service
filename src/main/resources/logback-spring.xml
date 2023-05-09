@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <property name="LOG_ROOT" value="/usr/share/logstash/logs/" />
+    <property name="LOG_ROOT" value="c:/temp/logs/" />
     <property name="LOG_FILE_NAME" value="loan-service" />
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
