@@ -35,5 +35,5 @@ build/
 ###Monitoring###
 .grafana
 .prometheus
-/scripts/grafana
-/scripts/prometheus
+/monitoring/grafana
+/monitoring/prometheus

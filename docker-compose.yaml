@@ -12,16 +12,10 @@ services:
     volumes:
       - ./setup/entrypoint.sh:/entrypoint.sh:ro,Z
       - ./setup/lib.sh:/lib.sh:ro,Z
-      - ./setup/roles:/roles:ro,Z
     environment:
       ELASTIC_PASSWORD: ${ELASTIC_PASSWORD:-}
       LOGSTASH_INTERNAL_PASSWORD: ${LOGSTASH_INTERNAL_PASSWORD:-}
       KIBANA_SYSTEM_PASSWORD: ${KIBANA_SYSTEM_PASSWORD:-}
-      METRICBEAT_INTERNAL_PASSWORD: ${METRICBEAT_INTERNAL_PASSWORD:-}
-      FILEBEAT_INTERNAL_PASSWORD: ${FILEBEAT_INTERNAL_PASSWORD:-}
-      HEARTBEAT_INTERNAL_PASSWORD: ${HEARTBEAT_INTERNAL_PASSWORD:-}
-      MONITORING_INTERNAL_PASSWORD: ${MONITORING_INTERNAL_PASSWORD:-}
-      BEATS_SYSTEM_PASSWORD: ${BEATS_SYSTEM_PASSWORD:-}
     depends_on:
       - elasticsearch
 
@@ -61,11 +55,11 @@ services:
       - postgres
 
   grafana:
-    build: './scripts/config/grafana'
+    build: 'monitoring/config/grafana'
     ports:
       - "3030:3000"
     volumes:
-      - ./grafana:/var/lib/grafana
+      - ./monitoring:/var/lib/grafana
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
@@ -75,7 +69,7 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - ./scripts/config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./monitoring/config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
 
   elasticsearch:
     build:
@@ -86,17 +80,12 @@ services:
       - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro,Z
       - elasticsearch:/usr/share/elasticsearch/data:Z
     ports:
-      - 9200:9200
-      - 9300:9300
+      - "9200:9200"
+      - "9300:9300"
     environment:
       node.name: elasticsearch
       ES_JAVA_OPTS: -Xms512m -Xmx512m
-      # Bootstrap password.
-      # Used to initialize the keystore during the initial startup of
-      # Elasticsearch. Ignored on subsequent runs.
       ELASTIC_PASSWORD: ${ELASTIC_PASSWORD:-}
-      # Use single node discovery in order to disable production mode and avoid bootstrap checks.
-      # see: https://www.elastic.co/guide/en/elasticsearch/reference/current/bootstrap-checks.html
       discovery.type: single-node
     restart: unless-stopped
 
@@ -108,27 +97,12 @@ services:
     volumes:
       - ./kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml:ro,Z
     ports:
-      - 5601:5601
+      - "5601:5601"
     environment:
       KIBANA_SYSTEM_PASSWORD: ${KIBANA_SYSTEM_PASSWORD:-}
     depends_on:
       - elasticsearch
     restart: unless-stopped
-
-#  filebeat:
-#    image: docker.elastic.co/beats/filebeat:${ELASTIC_VERSION}
-#    volumes:
-#      - ./filebeat/filebeat.yaml:/usr/share/filebeat/filebeat.yaml:ro
-#      - ./filebeat/data/:/usr/share/filebeat/data/:rw
-#      - /mnt/c/temp/logs/:/usr/share/logstash/logs/
-#    user: root
-#    restart: on-failure
-#    labels:
-#      co.elastic.logs/json.overwrite_keys: true
-#      co.elastic.logs/json.add_error_key: true
-#      co.elastic.logs/json.expand_keys: true
-#    depends_on:
-#      - logstash
 
   logstash:
     build:
@@ -140,10 +114,7 @@ services:
       - ./logstash/pipeline:/usr/share/logstash/pipeline/
       - c:/temp/logs/loan-service.log:/usr/share/logstash/logs/loan-service.log
     ports:
-      - 5044:5044
-      - 50000:50000/tcp
-      - 50000:50000/udp
-      - 9600:9600
+      - "9600:9600"
     environment:
       LOG_LEVEL: debug
       LS_JAVA_OPTS: -Xms256m -Xmx256m
@@ -151,8 +122,6 @@ services:
     depends_on:
       - elasticsearch
     restart: unless-stopped
-
-
 
 volumes:
   elasticsearch:
