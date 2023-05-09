@@ -9,14 +9,6 @@
         </encoder>
     </appender>
 
-    <appender name="SENTRY" class="io.sentry.logback.SentryAppender">
-        <minimumEventLevel>WARN</minimumEventLevel>
-    </appender>
-    <appender name="stash" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
-        <destination>0.0.0.0:50000</destination>
-        <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
-    </appender>
-
     <appender name="JsonRollingFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
 
         <file>${LOG_ROOT}/${LOG_FILE_NAME}.log</file>
@@ -41,8 +33,6 @@
 
     <root level="info">
         <appender-ref ref="STDOUT" />
-<!--        <appender-ref ref="stash" />-->
-        <!--        <appender-ref ref="SENTRY" />-->
         <appender-ref ref="JsonRollingFile" />
     </root>
 </configuration>
