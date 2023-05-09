@@ -77,11 +77,6 @@ function wait_for_builtin_users {
 	for _ in $(seq 1 30); do
 		num_users=0
 
-		# read exits with a non-zero code if the last read input doesn't end
-		# with a newline character. The printf without newline that follows the
-		# curl command ensures that the final input not only contains curl's
-		# exit code, but causes read to fail so we can capture the return value.
-		# Ref. https://unix.stackexchange.com/a/176703/152409
 		while IFS= read -r line || ! exit_code="$line"; do
 			if [[ "$line" =~ _reserved.+true ]]; then
 				(( num_users++ ))
@@ -185,39 +180,6 @@ function create_user {
 		'-X' 'POST'
 		'-H' 'Content-Type: application/json'
 		'-d' "{\"password\":\"${password}\",\"roles\":[\"${role}\"]}"
-		)
-
-	if [[ -n "${ELASTIC_PASSWORD:-}" ]]; then
-		args+=( '-u' "elastic:${ELASTIC_PASSWORD}" )
-	fi
-
-	local -i result=1
-	local output
-
-	output="$(curl "${args[@]}")"
-	if [[ "${output: -3}" -eq 200 ]]; then
-		result=0
-	fi
-
-	if ((result)); then
-		echo -e "\n${output::-3}\n"
-	fi
-
-	return $result
-}
-
-# Ensure that the given Elasticsearch role is up-to-date, create it if required.
-function ensure_role {
-	local name=$1
-	local body=$2
-
-	local elasticsearch_host="${ELASTICSEARCH_HOST:-elasticsearch}"
-
-	local -a args=( '-s' '-D-' '-m15' '-w' '%{http_code}'
-		"http://${elasticsearch_host}:9200/_security/role/${name}"
-		'-X' 'POST'
-		'-H' 'Content-Type: application/json'
-		'-d' "$body"
 		)
 
 	if [[ -n "${ELASTIC_PASSWORD:-}" ]]; then
