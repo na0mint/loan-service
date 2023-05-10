@@ -108,7 +108,7 @@ public class OrderServiceImpl implements OrderService {
         if(order.getStatus() == OrderStatus.IN_PROGRESS) {
             orderRepository.delete(orderToDelete.getUserId(), orderToDelete.getOrderId());
         } else {
-            log.warn("Order with id={} is impossible to delte due to it's status",
+            log.warn("Order with id={} is impossible to delete due to it's status",
                     orderToDelete.getOrderId());
 
             throw new OrderImpossibleToDeleteException();
