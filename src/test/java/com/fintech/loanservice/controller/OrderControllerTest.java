@@ -1,7 +1,9 @@
 package com.fintech.loanservice.controller;
 
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fintech.loanservice.constants.OrderStatus;
+import com.fintech.loanservice.dto.OrderDto;
 import com.fintech.loanservice.dto.mapper.OrderMapper;
 import com.fintech.loanservice.model.Order;
 import com.fintech.loanservice.repository.OrderRepository;
@@ -27,8 +29,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -102,6 +103,26 @@ public class OrderControllerTest {
     @Test
     public void getOrdersTest() throws Exception {
         mockMvc.perform(get("/loan-service/order"))
+                .andDo(print())
+                .andExpect(status().isOk());
+    }
+
+    @WithMockUser
+    @Test
+    public void saveOrderTest() throws Exception {
+        Order order = new Order(12L, UUID.fromString(
+                "af4f5ad2-8147-46cb-8389-c2b8c3ef6b10"), 21,
+                2, 0.65, OrderStatus.REFUSED);
+
+        OrderDto orderDto = new OrderDto();
+        orderDto.setUserId(12L);
+        orderDto.setTariffId(2);
+
+        when(orderService.save(orderMapper.mapToOrder(orderDto))).thenReturn(order);
+
+        mockMvc.perform(post("/loan-service/order").with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(orderDto)))
                 .andDo(print())
                 .andExpect(status().isOk());
     }
