@@ -112,9 +112,9 @@ services:
     volumes:
       - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml
       - ./logstash/pipeline:/usr/share/logstash/pipeline/
-      - c:/temp/logs/loan-service.log:/usr/share/logstash/logs/loan-service.log
     ports:
       - "9600:9600"
+      - "50000:50000/tcp"
     environment:
       LOG_LEVEL: debug
       LS_JAVA_OPTS: -Xms256m -Xmx256m
